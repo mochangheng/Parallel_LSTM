@@ -55,3 +55,26 @@ Everything in 100%, as well as exploring whether there are any other aspects of 
 (4/18) Parallelize LSTM inference on GPU using CUDA and optimize for speedup
 
 (4/25) Write report and prepare for presentation
+
+
+## Ideas
+- Look over layers instead of looking over timesteps.
+
+## Milestone
+
+First, we implemented the sequential LSTM inference logic in C++.
+We use the Eigen3 library to do matrix multiplication on CPU.
+The logic (matrix operations) of LSTM cells was copied from [PyTorch documentation](https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html).
+The LSTM class can be initialized with an arbitrary number of layers and latent dimension.
+Since we are mainly concerned with inference, and not training, the weight matrices are randomly initialized. 
+In real world usage, the weight learned from a training algorithm would be used instead, but random weights shouldn't affect parallelization speedups.
+
+We also implemented parallel LSTM inference using a wavefront parallelism strategy over different layers (described [here](https://developer.nvidia.com/blog/optimizing-recurrent-neural-networks-cudnn-5/)).
+The parallelism is implemented such that each thread repeatedly loops over all time steps.
+If a thread identifies available work, it acquires the lock at that time step and performs the work.
+The lock is implemented using compare and exchange in a way such that if someone else has the lock, the current thread simply skips over that time step instead of blocking.
+
+We gathered some preliminary results on a 8-core machine.
+With an LSTM of depth 4, we get 3.9x speedup with 8 threads.
+This is very close to the ideal speedup since the amount of speedup is limited by the depth of the LSTM.
+Indeed, when we used a depth of 8, we obtained a speedup of 7.9x with 8 threads.
