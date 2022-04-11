@@ -1,5 +1,17 @@
 # Layer-Parallel LSTMs
 
+## Code Instruction
+
+How to build and run the program
+
+```bash
+mkdir build
+cd build/
+cmake .. # only necessary to do once
+cmake --build .
+./parallel_lstm
+```
+
 ## Summary
 
 Long short-term memory (LSTM) is a neural network architecture used for sequence modeling. However, one notorious issue with LSTMs is that they are not easily parallelizable due to time dependencies. This seriously restricts their application because their training and inference is slow. In this project, we will attempt to parallelize LSTMs on different hardware by executing multiple layers in parallel.
