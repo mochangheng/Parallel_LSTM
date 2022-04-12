@@ -74,7 +74,19 @@ The parallelism is implemented such that each thread repeatedly loops over all t
 If a thread identifies available work, it acquires the lock at that time step and performs the work.
 The lock is implemented using compare and exchange in a way such that if someone else has the lock, the current thread simply skips over that time step instead of blocking.
 
+This means we have completed the first two weeks of our planned schedule.
+We believe we will be able to accomplish all goals and deliverables in our original.
+In terms of the extra content (125% goal), it is still unclear how long is will take to optimize, parallelize for GPU, and compare.
+For an updated list of goals, our goals are still mostly the same. We want to split our work between parallelizing on GPU and CPU.
+One new goal is to consider and test how matrix multiplication, which is a task often already paralleized, effects our results.
+We would obviously find that sequentialy matrix multiplication makes our new paralleization techniques look more impressive.
+However, if we get no speedup with parallelized matrix multiplication, that would tell us that computations like LTSM that are mostly matrix multiplcation are not worth paralleizing, since matrix multiplication is already well parallelized.
+
+For the poster session we plan to show and explain the dependency graph of a LTSM system as well as speedups achieved by our parallelization techniques.
+
 We gathered some preliminary results on a 8-core machine.
 With an LSTM of depth 4, we get 3.9x speedup with 8 threads.
 This is very close to the ideal speedup since the amount of speedup is limited by the depth of the LSTM.
 Indeed, when we used a depth of 8, we obtained a speedup of 7.9x with 8 threads.
+
+An issue that still needs to be investigated is the effect of parallelizing matrix multiplcation, as stated before.
