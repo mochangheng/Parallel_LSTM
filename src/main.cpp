@@ -68,6 +68,7 @@ int main(int argc, char* argv[]) {
   }
 
   EigenMatrix output(hidden_size, batch_size);
+  EigenMatrix gt_output(hidden_size, batch_size);
 
   auto start_time = Clock::now();
 
@@ -79,6 +80,11 @@ int main(int argc, char* argv[]) {
   }
 
   auto end_time = Clock::now();
+
+  lstm.forward(inputs, gt_output);
+  bool correct = output == gt_output;
+
+  std::cout << "Correctness: " << correct << std::endl;
   auto total_time = duration_cast<dsec>(end_time - start_time).count();
   std::cout << "Total time: " << total_time << std::endl;
 
