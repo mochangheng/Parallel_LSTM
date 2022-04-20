@@ -39,7 +39,7 @@ private:
 public:
     LSTM(int input_size, int hidden_size, int depth);
     void forward(const std::vector<Matrix>& inputs, Matrix& output);
-    void forward_par1(const std::vector<Matrix>& inputs, Matrix& output);
+    void forward_par1(const std::vector<Matrix>& inputs, Matrix& output, int num_threads = 1);
 
     // Friend thread function
     template <class T>

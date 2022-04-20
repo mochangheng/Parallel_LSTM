@@ -4,6 +4,35 @@
 #include <nnlib.hpp>
 #include <iostream>
 #include <cassert>
+#include <stdexcept>
+
+/* Broadcast two matrices such that their shapes match, if possible */
+void broadcast_matrices(const Eigen::MatrixXd& m1, const Eigen::MatrixXd& m2, Eigen::MatrixXd& out1, Eigen::MatrixXd& out2) {
+    if (m1.rows() != m2.rows()) {
+        if (m1.cols() != m2.cols()) {
+            throw std::invalid_argument("Cannot be broadcasted");
+        }
+        if (m1.rows() == 1) {
+            out1 = m1.replicate(m2.rows(), 1);
+            out2 = m2;
+        } else if (m2.rows() == 1) {
+            out2 = m2.replicate(m1.rows(), 1);
+            out1 = m1;
+        } else {
+            throw std::invalid_argument("Cannot be broadcasted");
+        }
+    } else if (m1.cols() != m2.cols()) {
+        if (m1.cols() == 1) {
+            out1 = m1.replicate(1, m2.cols());
+            out2 = m2;
+        } else if (m2.cols() == 1) {
+            out2 = m2.replicate(1, m1.cols());
+            out1 = m1;
+        } else {
+            throw std::invalid_argument("Cannot be broadcasted");
+        }
+    }
+}
 
 EigenMatrix::EigenMatrix(int row_dim, int col_dim) 
     : row_dim(row_dim)
@@ -36,7 +65,15 @@ int EigenMatrix::cols() const {
 }
 
 EigenMatrix EigenMatrix::operator*(const EigenMatrix& other) const {
-    return EigenMatrix((matrix.array() * other.matrix.array()).matrix());
+    Eigen::MatrixXd m1, m2;
+    // Broadcasting if needed
+    if ((matrix.rows() != other.matrix.rows()) || (matrix.cols() != other.matrix.cols())) {
+        broadcast_matrices(matrix, other.matrix, m1, m2);
+    } else {
+        m1 = matrix;
+        m2 = other.matrix;
+    }
+    return EigenMatrix((m1.array() * m2.array()).matrix());
 }
 
 EigenMatrix EigenMatrix::operator*(double value) const {
@@ -44,7 +81,15 @@ EigenMatrix EigenMatrix::operator*(double value) const {
 }
 
 EigenMatrix EigenMatrix::operator+(const EigenMatrix& other) const {
-    return EigenMatrix(matrix + other.matrix);
+    Eigen::MatrixXd m1, m2;
+    // Broadcasting if needed
+    if ((matrix.rows() != other.matrix.rows()) || (matrix.cols() != other.matrix.cols())) {
+        broadcast_matrices(matrix, other.matrix, m1, m2);
+    } else {
+        m1 = matrix;
+        m2 = other.matrix;
+    }
+    return EigenMatrix(m1 + m2);
 }
 
 EigenMatrix EigenMatrix::operator+(double value) const {
@@ -52,7 +97,15 @@ EigenMatrix EigenMatrix::operator+(double value) const {
 }
 
 EigenMatrix EigenMatrix::operator-(const EigenMatrix& other) const {
-    return EigenMatrix(matrix - other.matrix);
+    Eigen::MatrixXd m1, m2;
+    // Broadcasting if needed
+    if ((matrix.rows() != other.matrix.rows()) || (matrix.cols() != other.matrix.cols())) {
+        broadcast_matrices(matrix, other.matrix, m1, m2);
+    } else {
+        m1 = matrix;
+        m2 = other.matrix;
+    }
+    return EigenMatrix(m1 - m2);
 }
 
 EigenMatrix EigenMatrix::operator-(double value) const {

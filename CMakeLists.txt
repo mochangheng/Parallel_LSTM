@@ -11,6 +11,8 @@ set(SOURCES
     src/nnlib.cpp
 )
 
+find_package(OpenMP REQUIRED)
+
 # add the executable
 add_executable(parallel_lstm ${SOURCES})
 
@@ -19,3 +21,5 @@ target_include_directories(parallel_lstm
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/src
 )
+
+target_link_libraries(parallel_lstm PRIVATE OpenMP::OpenMP_CXX)

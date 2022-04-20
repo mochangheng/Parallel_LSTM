@@ -6,8 +6,6 @@
 #include <iostream>
 #include <cassert>
 
-#define NUM_THREADS 4
-
 std::atomic_bool* busy;
 int* progress;
 
@@ -67,12 +65,11 @@ void* thread_fn(void* args) {
             break;
     }
 
-    // std::cout << "Thread " << thread_args->thread_id << " done" << std::endl;
     return NULL;
 }
 
 template <class Matrix>
-void LSTM<Matrix>::forward_par1(const std::vector<Matrix>& inputs, Matrix& output) {
+void LSTM<Matrix>::forward_par1(const std::vector<Matrix>& inputs, Matrix& output, int num_threads) {
     int input_length = inputs.size();
 
     busy = new std::atomic_bool[input_length];
@@ -94,10 +91,10 @@ void LSTM<Matrix>::forward_par1(const std::vector<Matrix>& inputs, Matrix& outpu
         cs.push_back(c);
     }
 
-    struct ThreadArgs<Matrix> args[NUM_THREADS];
-    pthread_t threads[NUM_THREADS];
+    struct ThreadArgs<Matrix> args[num_threads];
+    pthread_t threads[num_threads];
 
-    for (int thread_idx = 1; thread_idx < NUM_THREADS; thread_idx++) {
+    for (int thread_idx = 1; thread_idx < num_threads; thread_idx++) {
         args[thread_idx].outputs = &outputs;
         args[thread_idx].hs = &hs;
         args[thread_idx].cs = &cs;
@@ -113,7 +110,7 @@ void LSTM<Matrix>::forward_par1(const std::vector<Matrix>& inputs, Matrix& outpu
     args[0].thread_id = 0;
     thread_fn<Matrix>((void *)(&args[0]));
 
-    for (int thread_idx = 1; thread_idx < NUM_THREADS; thread_idx++) {
+    for (int thread_idx = 1; thread_idx < num_threads; thread_idx++) {
         pthread_join(threads[thread_idx], NULL);
     }
 
