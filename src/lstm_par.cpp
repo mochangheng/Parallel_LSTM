@@ -1,5 +1,6 @@
-#include <lstm.hpp>
-#include <eigen_matrix.hpp>
+#include "lstm.hpp"
+#include "eigen_matrix.hpp"
+#include "cuda_matrix.hpp"
 #include <vector>
 #include <pthread.h>
 #include <atomic>
@@ -20,6 +21,10 @@ struct ThreadArgs {
 
 template <class Matrix>
 void* thread_fn(void* args) {
+
+    // Initialize Cublas
+    cublas_init();
+
     struct ThreadArgs<Matrix>* thread_args = (struct ThreadArgs<Matrix>*) args;
 
     std::vector<Matrix>* outputs = thread_args->outputs;
@@ -69,6 +74,9 @@ void* thread_fn(void* args) {
         if (all_done)
             break;
     }
+
+    // Finalize Cublas
+    cublas_finalize();
 
     return NULL;
 }
@@ -128,3 +136,4 @@ void LSTM<Matrix>::forward_par1(const std::vector<Matrix>& inputs, Matrix& outpu
 }
 
 template class LSTM<EigenMatrix>;
+template class LSTM<CudaMatrix>;

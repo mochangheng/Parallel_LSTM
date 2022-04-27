@@ -1,5 +1,6 @@
-#include <lstm.hpp>
-#include <eigen_matrix.hpp>
+#include "lstm.hpp"
+#include "eigen_matrix.hpp"
+#include "cuda_matrix.hpp"
 #include <iostream>
 #include <vector>
 
@@ -67,6 +68,9 @@ LSTM<Matrix>::LSTM(int input_size, int hidden_size, int depth)
 
 template <class Matrix>
 void LSTM<Matrix>::forward(const std::vector<Matrix>& inputs, Matrix& output) {
+
+    cublas_init();
+
     int input_length = inputs.size();
 
     std::vector<Matrix> hs;
@@ -90,7 +94,12 @@ void LSTM<Matrix>::forward(const std::vector<Matrix>& inputs, Matrix& output) {
     }
 
     output = hs[depth-1];
+
+    cublas_finalize();
+
 }
 
 template class LSTMCell<EigenMatrix>;
 template class LSTM<EigenMatrix>;
+template class LSTMCell<CudaMatrix>;
+template class LSTM<CudaMatrix>;
