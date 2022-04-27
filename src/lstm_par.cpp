@@ -1,5 +1,6 @@
-#include <lstm.hpp>
-#include <eigen_matrix.hpp>
+#include "lstm.hpp"
+#include "eigen_matrix.hpp"
+#include "cuda_matrix.hpp"
 #include <vector>
 #include <pthread.h>
 #include <atomic>
@@ -20,6 +21,10 @@ struct ThreadArgs {
 
 template <class Matrix>
 void* thread_fn(void* args) {
+
+    // Initialize Cublas
+    cublas_init();
+
     struct ThreadArgs<Matrix>* thread_args = (struct ThreadArgs<Matrix>*) args;
 
     std::vector<Matrix>* outputs = thread_args->outputs;
@@ -33,37 +38,45 @@ void* thread_fn(void* args) {
     while (true) {
         bool all_done = true;
 
-        for (int i = 0; i < input_length; i++) {
-            int prev_progress = (i == 0) ? depth : progress[i-1];
+        for (int i = 0; i < depth; i++) {
+            bool updated = false;
+            int prev_progress = (i == 0) ? input_length : progress[i-1];
             if (prev_progress > progress[i] && !busy[i]) {
-                // NOTE: we don't need this condition but this might reduce contention
+                // NOTE: Check execution conditions before trying to get lock to reduce contention
                 bool val = false;
                 bool success = busy[i].compare_exchange_weak(val, true);
                 if (success) { // Acquired the lock
-                    // Update `prev_progress` to get newest information
-                    prev_progress = (i == 0) ? depth : progress[i-1];
+                    // Check execution conditions again
+                    prev_progress = (i == 0) ? input_length : progress[i-1];
                     if (prev_progress > progress[i]) {
-                        // Do a forward pass
-                        int depth_idx = progress[i];
-                        lstm->lstm_cells[depth_idx].forward((*outputs)[i], (*hs)[depth_idx], (*cs)[depth_idx], (*hs)[depth_idx], (*cs)[depth_idx]);
-                        (*outputs)[i] = (*hs)[depth_idx];
+                        // If conditions satisfied, do a forward pass
+                        int input_idx = progress[i];
+                        lstm->lstm_cells[i].forward((*outputs)[input_idx], (*hs)[i], (*cs)[i], (*hs)[i], (*cs)[i]);
+                        (*outputs)[input_idx] = (*hs)[i];
                         progress[i]++;
+                        updated = true;
                     }
                     // Release the lock
                     busy[i] = false;
                 }
             }
 
-            if (progress[i] < depth)
+            if (progress[i] < input_length)
                 all_done = false;
 
             if (progress[i] == 0)
                 break;
+
+            if (updated) // If we do a forward pass, stay at the same layer for better locality
+                i--;
         }
 
         if (all_done)
             break;
     }
+
+    // Finalize Cublas
+    cublas_finalize();
 
     return NULL;
 }
@@ -72,9 +85,9 @@ template <class Matrix>
 void LSTM<Matrix>::forward_par1(const std::vector<Matrix>& inputs, Matrix& output, int num_threads) {
     int input_length = inputs.size();
 
-    busy = new std::atomic_bool[input_length];
-    progress = new int[input_length];
-    for (int i = 0; i < input_length; i++) {
+    busy = new std::atomic_bool[depth];
+    progress = new int[depth];
+    for (int i = 0; i < depth; i++) {
         busy[i] = false;
         progress[i] = 0;
     }
@@ -123,3 +136,4 @@ void LSTM<Matrix>::forward_par1(const std::vector<Matrix>& inputs, Matrix& outpu
 }
 
 template class LSTM<EigenMatrix>;
+template class LSTM<CudaMatrix>;

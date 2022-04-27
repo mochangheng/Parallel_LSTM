@@ -59,21 +59,7 @@ Everything in 100%, as well as exploring whether there are any other aspects of 
 
 ## To do
 
-Different types of parallelism
-
-- When parallelizing, look for worker over layers instead of looking over timesteps.
-
-- One thread per layer parallelism
-
-Impose more realistic conditions
-
-- Parallel matrix multiplication
-
-- Batch parallelization (matrix-matrix multiplication instead of matrix vector multiplication)
-
-Heterogeneous computing
-
-- Try CUDA / GPU
+- Fix cublas init calls
 
 ## Milestone
 

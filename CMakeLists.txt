@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 
+enable_language(CUDA)
+
 # set the project name
 project(parallel_lstm)
 
 set(SOURCES
+    src/cuda_kernels.cu
     src/eigen_matrix.cpp
+    src/cuda_matrix.cpp
     src/lstm.cpp
     src/lstm_par.cpp
     src/main.cpp
@@ -12,6 +16,7 @@ set(SOURCES
 )
 
 find_package(OpenMP REQUIRED)
+find_package(CUDAToolkit REQUIRED)
 
 # add the executable
 add_executable(parallel_lstm ${SOURCES})
@@ -23,3 +28,4 @@ target_include_directories(parallel_lstm
 )
 
 target_link_libraries(parallel_lstm PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(parallel_lstm PRIVATE CUDA::cudart CUDA::cublas)

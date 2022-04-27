@@ -1,7 +1,7 @@
-#include <eigen_matrix.hpp>
+#include "eigen_matrix.hpp"
 #include <Eigen/Dense>
 #include <cmath>
-#include <nnlib.hpp>
+#include "nnlib.hpp"
 #include <iostream>
 #include <cassert>
 #include <stdexcept>
@@ -54,6 +54,12 @@ void EigenMatrix::_init_zeros() {
 
 const Eigen::MatrixXd& EigenMatrix::get_matrix() const {
     return matrix;
+}
+
+double *EigenMatrix::get_data() const {
+    double *data = new double[row_dim * col_dim];
+    memcpy(data, matrix.data(), row_dim * col_dim * sizeof(double));
+    return data;
 }
 
 int EigenMatrix::rows() const {

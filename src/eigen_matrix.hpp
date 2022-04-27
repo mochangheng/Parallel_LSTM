@@ -1,5 +1,5 @@
-#ifndef EIGEN_TENSOR
-#define EIGEN_TENSOR
+#ifndef _EIGEN_TENSOR_
+#define _EIGEN_TENSOR_
 
 #include <Eigen/Dense>
 
@@ -16,6 +16,7 @@ public:
     void _init_random();
     void _init_zeros();
     const Eigen::MatrixXd& get_matrix() const;
+    double *get_data() const;
     int rows() const;
     int cols() const;
 
