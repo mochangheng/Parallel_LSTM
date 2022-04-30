@@ -107,21 +107,17 @@ void LSTM<Matrix>::forward_par1(const std::vector<Matrix>& inputs, Matrix& outpu
     struct ThreadArgs<Matrix> args[num_threads];
     pthread_t threads[num_threads];
 
-    for (int thread_idx = 1; thread_idx < num_threads; thread_idx++) {
+    for (int thread_idx = num_threads-1; thread_idx >= 0; thread_idx--) {
         args[thread_idx].outputs = &outputs;
         args[thread_idx].hs = &hs;
         args[thread_idx].cs = &cs;
         args[thread_idx].lstm = this;
         args[thread_idx].thread_id = thread_idx;
-        pthread_create(&threads[thread_idx], NULL, thread_fn<Matrix>, (void *)(&args[thread_idx]));
+        if (thread_idx == 0)
+            thread_fn<Matrix>((void *)(&args[0]));
+        else
+            pthread_create(&threads[thread_idx], NULL, thread_fn<Matrix>, (void *)(&args[thread_idx]));
     }
-
-    args[0].outputs = &outputs;
-    args[0].hs = &hs;
-    args[0].cs = &cs;
-    args[0].lstm = this;
-    args[0].thread_id = 0;
-    thread_fn<Matrix>((void *)(&args[0]));
 
     for (int thread_idx = 1; thread_idx < num_threads; thread_idx++) {
         pthread_join(threads[thread_idx], NULL);
