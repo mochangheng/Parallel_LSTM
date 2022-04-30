@@ -64,7 +64,7 @@ void cudaTest() {
 
 int main(int argc, char* argv[]) {
   // Constants
-  bool do_par = true;
+  int do_par = 1;
   bool check_correct = false;
 
   // Cmd line arguments
@@ -129,11 +129,12 @@ int main(int argc, char* argv[]) {
 
     auto start_time = Clock::now();
 
-    if (do_par) {
-      lstm.forward_par1(inputs, output, num_threads);
-    }
-    else {
+    if (do_par == 0) {
       lstm.forward(inputs, output);
+    } else if (do_par == 1) {
+      lstm.forward_par1(inputs, output, num_threads);
+    } else {
+      lstm.forward_par2(inputs, output, num_threads);
     }
 
     auto end_time = Clock::now();
@@ -172,11 +173,12 @@ int main(int argc, char* argv[]) {
 
     auto start_time = Clock::now();
 
-    if (do_par) {
-      lstm.forward_par1(inputs, output, num_threads);
-    }
-    else {
+    if (do_par == 0) {
       lstm.forward(inputs, output);
+    } else if (do_par == 1) {
+      lstm.forward_par1(inputs, output, num_threads);
+    } else {
+      lstm.forward_par2(inputs, output, num_threads);
     }
 
     auto end_time = Clock::now();
