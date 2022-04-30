@@ -1,3 +1,5 @@
+#define NDEBUG
+
 #include "lstm.hpp"
 #include "eigen_matrix.hpp"
 #include "cuda_matrix.hpp"
@@ -7,8 +9,10 @@
 #include <iostream>
 #include <cassert>
 
-std::atomic_bool* busy;
+// Set this flag to use cuda
+const bool use_cuda = false;
 int* progress;
+std::atomic_bool* busy;
 
 template <class Matrix>
 struct ThreadArgs {
@@ -16,14 +20,14 @@ struct ThreadArgs {
     std::vector<Matrix>* hs;
     std::vector<Matrix>* cs;
     LSTM<Matrix>* lstm;
-    int thread_id;
 };
 
 template <class Matrix>
 void* thread_fn(void* args) {
 
     // Initialize Cublas
-    cublas_init();
+    if (use_cuda)
+        cublas_init();
 
     struct ThreadArgs<Matrix>* thread_args = (struct ThreadArgs<Matrix>*) args;
 
@@ -76,7 +80,8 @@ void* thread_fn(void* args) {
     }
 
     // Finalize Cublas
-    cublas_finalize();
+    if (use_cuda)
+        cublas_finalize();
 
     return NULL;
 }
@@ -104,20 +109,19 @@ void LSTM<Matrix>::forward_par1(const std::vector<Matrix>& inputs, Matrix& outpu
         cs.push_back(c);
     }
 
-    struct ThreadArgs<Matrix> args[num_threads];
+    struct ThreadArgs<Matrix> args;
     pthread_t threads[num_threads];
 
-    for (int thread_idx = num_threads-1; thread_idx >= 0; thread_idx--) {
-        args[thread_idx].outputs = &outputs;
-        args[thread_idx].hs = &hs;
-        args[thread_idx].cs = &cs;
-        args[thread_idx].lstm = this;
-        args[thread_idx].thread_id = thread_idx;
-        if (thread_idx == 0)
-            thread_fn<Matrix>((void *)(&args[0]));
-        else
-            pthread_create(&threads[thread_idx], NULL, thread_fn<Matrix>, (void *)(&args[thread_idx]));
+    args.outputs = &outputs;
+    args.hs = &hs;
+    args.cs = &cs;
+    args.lstm = this;
+
+    for (int thread_idx = 1; thread_idx < num_threads; thread_idx++) {
+        pthread_create(&threads[thread_idx], NULL, thread_fn<Matrix>, (void *)(&args));
     }
+
+    thread_fn<Matrix>((void *)(&args));
 
     for (int thread_idx = 1; thread_idx < num_threads; thread_idx++) {
         pthread_join(threads[thread_idx], NULL);

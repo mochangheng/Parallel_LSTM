@@ -1,3 +1,5 @@
+#define NDEBUG
+
 #include <iostream>
 #include <Eigen/Dense>
 #include "eigen_matrix.hpp"
@@ -62,7 +64,8 @@ void cudaTest() {
 
 int main(int argc, char* argv[]) {
   // Constants
-  bool do_par = true;
+  int do_par = 1;
+  bool check_correct = false;
 
   // Cmd line arguments
   bool use_cuda = false;
@@ -126,11 +129,12 @@ int main(int argc, char* argv[]) {
 
     auto start_time = Clock::now();
 
-    if (do_par) {
-      lstm.forward_par1(inputs, output, num_threads);
-    }
-    else {
+    if (do_par == 0) {
       lstm.forward(inputs, output);
+    } else if (do_par == 1) {
+      lstm.forward_par1(inputs, output, num_threads);
+    } else {
+      lstm.forward_par2(inputs, output, num_threads);
     }
 
     auto end_time = Clock::now();
@@ -169,17 +173,21 @@ int main(int argc, char* argv[]) {
 
     auto start_time = Clock::now();
 
-    if (do_par) {
-      lstm.forward_par1(inputs, output, num_threads);
-    }
-    else {
+    if (do_par == 0) {
       lstm.forward(inputs, output);
+    } else if (do_par == 1) {
+      lstm.forward_par1(inputs, output, num_threads);
+    } else {
+      lstm.forward_par2(inputs, output, num_threads);
     }
 
     auto end_time = Clock::now();
 
-    lstm.forward(inputs, gt_output);
-    bool correct = output == gt_output;
+    if (check_correct) {
+      lstm.forward(inputs, gt_output);
+      bool correct = output == gt_output;
+      std::cout << "Correctness: " << correct << std::endl;
+    }
 
     // DEBUG
     // double *data = output.get_data();
@@ -188,7 +196,6 @@ int main(int argc, char* argv[]) {
     // std::cout << " ----- " << std::endl;
     // arrayPrint(gt_data, hidden_size * batch_size);
 
-    std::cout << "Correctness: " << correct << std::endl;
     auto total_time = duration_cast<dsec>(end_time - start_time).count();
     std::cout << "Total time: " << total_time << std::endl;
 

@@ -57,9 +57,10 @@ Everything in 100%, as well as exploring whether there are any other aspects of 
 (4/25) Write report and prepare for presentation
 
 
-## To do
-
-- Fix cublas init calls
+## Things to adjust
+- `use_cuda` flags
+- assert call
+- change `forward_parX`
 
 ## Milestone
 
