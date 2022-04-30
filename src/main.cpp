@@ -63,6 +63,7 @@ void cudaTest() {
 int main(int argc, char* argv[]) {
   // Constants
   bool do_par = true;
+  bool check_correct = false;
 
   // Cmd line arguments
   bool use_cuda = false;
@@ -178,8 +179,11 @@ int main(int argc, char* argv[]) {
 
     auto end_time = Clock::now();
 
-    lstm.forward(inputs, gt_output);
-    bool correct = output == gt_output;
+    if (check_correct) {
+      lstm.forward(inputs, gt_output);
+      bool correct = output == gt_output;
+      std::cout << "Correctness: " << correct << std::endl;
+    }
 
     // DEBUG
     // double *data = output.get_data();
@@ -188,7 +192,6 @@ int main(int argc, char* argv[]) {
     // std::cout << " ----- " << std::endl;
     // arrayPrint(gt_data, hidden_size * batch_size);
 
-    std::cout << "Correctness: " << correct << std::endl;
     auto total_time = duration_cast<dsec>(end_time - start_time).count();
     std::cout << "Total time: " << total_time << std::endl;
 
