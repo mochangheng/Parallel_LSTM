@@ -1,3 +1,5 @@
+#define NDEBUG
+
 #include "eigen_matrix.hpp"
 #include <Eigen/Dense>
 #include <cmath>

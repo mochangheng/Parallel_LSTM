@@ -1,3 +1,5 @@
+#define NDEBUG
+
 #include "lstm.hpp"
 #include "eigen_matrix.hpp"
 #include "cuda_matrix.hpp"
@@ -7,8 +9,10 @@
 #include <iostream>
 #include <cassert>
 
-std::atomic_bool* busy;
+// Set this flag to use cuda
+const bool use_cuda = false;
 int* progress;
+std::atomic_bool* busy;
 
 template <class Matrix>
 struct ThreadArgs {
@@ -22,7 +26,8 @@ template <class Matrix>
 void* thread_fn(void* args) {
 
     // Initialize Cublas
-    cublas_init();
+    if (use_cuda)
+        cublas_init();
 
     struct ThreadArgs<Matrix>* thread_args = (struct ThreadArgs<Matrix>*) args;
 
@@ -75,7 +80,8 @@ void* thread_fn(void* args) {
     }
 
     // Finalize Cublas
-    cublas_finalize();
+    if (use_cuda)
+        cublas_finalize();
 
     return NULL;
 }

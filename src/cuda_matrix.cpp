@@ -1,3 +1,5 @@
+#define NDEBUG
+
 #include "cuda_matrix.hpp"
 #include <cuda_runtime.h>
 #include "cublas_v2.h"
