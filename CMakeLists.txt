@@ -16,16 +16,17 @@ set(SOURCES
 )
 
 find_package(OpenMP REQUIRED)
-find_package(CUDAToolkit REQUIRED)
+find_package(CUDA REQUIRED)
 
 # add the executable
 add_executable(parallel_lstm ${SOURCES})
 
+include_directories("${CUDA_INCLUDE_DIRS}")
 target_include_directories(parallel_lstm
-    PRIVATE 
+    PRIVATE
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/src
 )
 
 target_link_libraries(parallel_lstm PRIVATE OpenMP::OpenMP_CXX)
-target_link_libraries(parallel_lstm PRIVATE CUDA::cudart CUDA::cublas)
+target_link_libraries(parallel_lstm PRIVATE cudart cublas)

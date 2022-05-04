@@ -10,7 +10,7 @@
 #include <cassert>
 
 // Set this flag to use cuda
-const bool use_cuda = false;
+const bool use_cuda = true;
 int* progress2; // Somehow `progress` conflicts with `lstm_par.cpp`
 std::atomic_int next_layer(0);
 

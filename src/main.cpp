@@ -20,6 +20,7 @@ typedef std::chrono::duration<double> dsec;
 bool arrayEqual(double *a, double *b, int n) {
   for (int i = 0; i < n; i++) {
     if (a[i] != b[i]) {
+      printf("%f, %f\n", a[i], b[i]);
       return false;
     }
   }
@@ -65,7 +66,7 @@ void cudaTest() {
 int main(int argc, char* argv[]) {
   // Constants
   int do_par = 1;
-  bool check_correct = false;
+  bool check_correct = true;
 
   // Cmd line arguments
   bool use_cuda = false;
@@ -139,17 +140,22 @@ int main(int argc, char* argv[]) {
 
     auto end_time = Clock::now();
 
-    lstm.forward(inputs, gt_output);
-    bool correct = output == gt_output;
+    if (check_correct) {
+      lstm.forward(inputs, gt_output);
+      bool correct = output == gt_output;
+      std::cout << "Correctness: " << correct << std::endl;
+    }
 
     // DEBUG
-    // double *data = output.get_data();
-    // double *gt_data = gt_output.get_data();
-    // arrayPrint(data, hidden_size * batch_size);
-    // std::cout << " ----- " << std::endl;
-    // arrayPrint(gt_data, hidden_size * batch_size);
+    /*
+    double *data = output.get_data();
+    double *gt_data = gt_output.get_data();
+    arrayPrint(data, hidden_size * batch_size);
+    std::cout << " ----- " << std::endl;
+    arrayPrint(gt_data, hidden_size * batch_size);
+    arrayEqual(gt_data, data, hidden_size * batch_size);
+    */
 
-    std::cout << "Correctness: " << correct << std::endl;
     auto total_time = duration_cast<dsec>(end_time - start_time).count();
     std::cout << "Total time: " << total_time << std::endl;
 

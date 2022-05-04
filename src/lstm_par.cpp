@@ -10,7 +10,7 @@
 #include <cassert>
 
 // Set this flag to use cuda
-const bool use_cuda = false;
+const bool use_cuda = true;
 int* progress;
 std::atomic_bool* busy;
 

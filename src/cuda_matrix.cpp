@@ -35,6 +35,10 @@ void cublas_finalize() {
     cudaCheckError();
 }
 
+bool approxEqual(double x, double y) {
+    return std::abs(x-y) < 1e-5;
+}
+
 CudaMatrix::CudaMatrix(int row_dim, int col_dim)
     : row_dim(row_dim)
     , col_dim(col_dim) {
@@ -208,7 +212,7 @@ bool CudaMatrix::operator==(const CudaMatrix& other) const {
 
     bool is_equal = true;
     for (int i = 0; i < num_elem; i++) {
-        if (data[i] != other_data[i]) {
+        if (!approxEqual(data[i], other_data[i])) {
             is_equal = false;
             break;
         }

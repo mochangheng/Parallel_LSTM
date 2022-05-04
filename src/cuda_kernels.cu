@@ -78,7 +78,7 @@ void cudaMultiply(const double *devPtrA, const double *devPtrB, double *devPtrC,
     dim3 threadsPerBlock(BLOCKSIZE, 1);
     dim3 numBlocks((numElem + BLOCKSIZE - 1) / BLOCKSIZE, 1);
     multiply_kernel<<<numBlocks, threadsPerBlock, 0, cuda_stream>>>(devPtrA, devPtrB, devPtrC, numElem);
-    cudaDeviceSynchronize();
+    
     cudaCheckError();
 }
 
@@ -86,7 +86,7 @@ void cudaMultiplyScalar(const double *devPtrA, double x, double *devPtrC, int nu
     dim3 threadsPerBlock(BLOCKSIZE, 1);
     dim3 numBlocks((numElem + BLOCKSIZE - 1) / BLOCKSIZE, 1);
     multiply_scalar_kernel<<<numBlocks, threadsPerBlock, 0, cuda_stream>>>(devPtrA, x, devPtrC, numElem);
-    cudaDeviceSynchronize();
+    
     cudaCheckError();
 }
 
@@ -94,7 +94,7 @@ void cudaAdd(const double *devPtrA, const double *devPtrB, double *devPtrC, int 
     dim3 threadsPerBlock(BLOCKSIZE, 1);
     dim3 numBlocks((numElem + BLOCKSIZE - 1) / BLOCKSIZE, 1);
     add_kernel<<<numBlocks, threadsPerBlock, 0, cuda_stream>>>(devPtrA, devPtrB, devPtrC, numElem);
-    cudaDeviceSynchronize();
+    
     cudaCheckError();
 }
 
@@ -102,7 +102,7 @@ void cudaAddScalar(const double *devPtrA, double x, double *devPtrC, int numElem
     dim3 threadsPerBlock(BLOCKSIZE, 1);
     dim3 numBlocks((numElem + BLOCKSIZE - 1) / BLOCKSIZE, 1);
     add_scalar_kernel<<<numBlocks, threadsPerBlock, 0, cuda_stream>>>(devPtrA, x, devPtrC, numElem);
-    cudaDeviceSynchronize();
+    
     cudaCheckError();
 }
 
@@ -110,7 +110,7 @@ void cudaSubtract(const double *devPtrA, const double *devPtrB, double *devPtrC,
     dim3 threadsPerBlock(BLOCKSIZE, 1);
     dim3 numBlocks((numElem + BLOCKSIZE - 1) / BLOCKSIZE, 1);
     subtract_kernel<<<numBlocks, threadsPerBlock, 0, cuda_stream>>>(devPtrA, devPtrB, devPtrC, numElem);
-    cudaDeviceSynchronize();
+    
     cudaCheckError();
 }
 
@@ -118,7 +118,7 @@ void cudaSubtractScalar(const double *devPtrA, double x, double *devPtrC, int nu
     dim3 threadsPerBlock(BLOCKSIZE, 1);
     dim3 numBlocks((numElem + BLOCKSIZE - 1) / BLOCKSIZE, 1);
     subtract_scalar_kernel<<<numBlocks, threadsPerBlock, 0, cuda_stream>>>(devPtrA, x, devPtrC, numElem);
-    cudaDeviceSynchronize();
+    
     cudaCheckError();
 }
 
@@ -126,7 +126,7 @@ void cudaExp(const double *devPtrA, double *devPtrC, int numElem, cudaStream_t c
     dim3 threadsPerBlock(BLOCKSIZE, 1);
     dim3 numBlocks((numElem + BLOCKSIZE - 1) / BLOCKSIZE, 1);
     exp_kernel<<<numBlocks, threadsPerBlock, 0, cuda_stream>>>(devPtrA, devPtrC, numElem);
-    cudaDeviceSynchronize();
+    
     cudaCheckError();
 }
 
@@ -134,7 +134,7 @@ void cudaSigmoid(const double *devPtrA, double *devPtrC, int numElem, cudaStream
     dim3 threadsPerBlock(BLOCKSIZE, 1);
     dim3 numBlocks((numElem + BLOCKSIZE - 1) / BLOCKSIZE, 1);
     sigmoid_kernel<<<numBlocks, threadsPerBlock, 0, cuda_stream>>>(devPtrA, devPtrC, numElem);
-    cudaDeviceSynchronize();
+    
     cudaCheckError();
 }
 
@@ -142,6 +142,6 @@ void cudaTanh(const double *devPtrA, double *devPtrC, int numElem, cudaStream_t 
     dim3 threadsPerBlock(BLOCKSIZE, 1);
     dim3 numBlocks((numElem + BLOCKSIZE - 1) / BLOCKSIZE, 1);
     tanh_kernel<<<numBlocks, threadsPerBlock, 0, cuda_stream>>>(devPtrA, devPtrC, numElem);
-    cudaDeviceSynchronize();
+    
     cudaCheckError();
 }
