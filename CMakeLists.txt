@@ -11,6 +11,7 @@ set(SOURCES
     src/lstm.cpp
     src/lstm_par.cpp
     src/lstm_par2.cpp
+    src/lstm_par3.cpp
     src/main.cpp
     src/nnlib.cpp
 )
