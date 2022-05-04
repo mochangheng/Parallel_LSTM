@@ -25,7 +25,6 @@ include_directories("${CUDA_INCLUDE_DIRS}")
 target_include_directories(parallel_lstm
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
-        ${PROJECT_SOURCE_DIR}/src
 )
 
 target_link_libraries(parallel_lstm PRIVATE OpenMP::OpenMP_CXX)

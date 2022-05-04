@@ -65,8 +65,8 @@ void cudaTest() {
 
 int main(int argc, char* argv[]) {
   // Constants
-  int do_par = 1;
-  bool check_correct = true;
+  int do_par = 2;
+  bool check_correct = false;
 
   // Cmd line arguments
   bool use_cuda = false;
