@@ -1,3 +1,3 @@
 
-const bool use_cuda = true;
+const bool use_cuda = false;
 

@@ -65,7 +65,7 @@ void cudaTest() {
 
 int main(int argc, char* argv[]) {
   // Constants
-  int do_par = 2;
+  int do_par = 3;
   bool check_correct = false;
 
   // Cmd line arguments
@@ -134,8 +134,10 @@ int main(int argc, char* argv[]) {
       lstm.forward(inputs, output);
     } else if (do_par == 1) {
       lstm.forward_par1(inputs, output, num_threads);
-    } else {
+    } else if (do_par == 2) {
       lstm.forward_par2(inputs, output, num_threads);
+    } else {
+      lstm.forward_par3(inputs, output, num_threads);
     }
 
     auto end_time = Clock::now();

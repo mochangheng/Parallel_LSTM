@@ -3,6 +3,7 @@
 #include "lstm.hpp"
 #include "eigen_matrix.hpp"
 #include "cuda_matrix.hpp"
+#include "use_cuda.hpp"
 #include <vector>
 #include <pthread.h>
 #include <atomic>
@@ -10,8 +11,6 @@
 #include <cassert>
 #include <queue>
 
-// Set this flag to use cuda
-const bool use_cuda = false;
 std::atomic_int* progress3;
 
 struct layerComparator
