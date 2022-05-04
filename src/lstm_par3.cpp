@@ -44,21 +44,20 @@ PQ::PQ(int max_priority) {
 }
 
 int PQ::get_layer_task(void) {
+    if (queue.empty()) {
+        return finished ? -2 : -1;
+    }
     bool success = false;
     // Wait for lock
     while (!success) {
         bool val = false;
         success = pq_busy.compare_exchange_weak(val, true);
     }
-    if (finished) {
-        pq_busy = false;
-        return -2;
-    }
     if (queue.empty()) {
         pq_busy = false;
-        return -1;
+        return finished ? -2 : -1;
     }
-    std::tuple<int, int> tuple1 = queue.top(); queue.pop();
+    std::tuple<int, int> tuple1 = queue.pop();
     int layer = std::get<0>(tuple1);
     int priority = std::get<1>(tuple1);
     check_max_priority(priority);
@@ -125,22 +124,22 @@ void* thread_fn3(void* args) {
         int old_layer = layer_idx;
         layer_idx = -1;
         int next_layer = old_layer + 1;
-        if (next_layer < lstm->depth) {
-            int progress_next_layer = progress3[next_layer].load(std::memory_order_relaxed);
-            if (progress_next_layer + 1 >= progress_old_layer) {
-                layer_idx = next_layer;
-                pq->check_max_priority(next_layer + progress_next_layer);
-            }
-        }
         if (progress3[old_layer].load(std::memory_order_relaxed) < input_length) {
             int progress_below_layer = old_layer == 0 ? input_length : progress3[old_layer - 1].load(std::memory_order_relaxed);
             if (progress_below_layer >= progress_old_layer + 1) {
-                int priority = old_layer + progress_old_layer;
+                layer_idx = old_layer;
+                pq->check_max_priority(old_layer + progress_old_layer);
+            }
+        }
+        if (next_layer < lstm->depth) {
+            int progress_next_layer = progress3[next_layer].load(std::memory_order_relaxed);
+            if (progress_next_layer + 1 >= progress_old_layer) {
+                int priority = next_layer + progress_next_layer;
                 if (layer_idx == -1) {
-                    layer_idx = old_layer;
+                    layer_idx = next_layer;
                     pq->check_max_priority(priority);
                 } else {
-                    pq->add_layer_task(old_layer, priority);
+                    pq->add_layer_task(next_layer, priority);
                 }
             }
         }
