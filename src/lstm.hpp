@@ -41,6 +41,7 @@ public:
     void forward(const std::vector<Matrix>& inputs, Matrix& output);
     void forward_par1(const std::vector<Matrix>& inputs, Matrix& output, int num_threads = 1);
     void forward_par2(const std::vector<Matrix>& inputs, Matrix& output, int num_threads = 1);
+    void forward_par3(const std::vector<Matrix>& inputs, Matrix& output, int num_threads = 1);
 
     // Friend thread function
     template <class T>
@@ -48,6 +49,9 @@ public:
 
     template <class T>
     friend void* thread_fn2 (void* args);
+
+    template <class T>
+    friend void* thread_fn3 (void* args);
 };
 
 #endif

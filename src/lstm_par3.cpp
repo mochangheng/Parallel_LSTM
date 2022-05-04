@@ -14,14 +14,15 @@
 const bool use_cuda = false;
 int* progress3;
 bool* one_depency;
+std::atomic_bool* busy3;
 
 struct layerComparator
 {
     // >= operation for a "max heap". We want a min-heap so we compare priorities with <=
-  int operator()(const tuple<int, int>& tuple1,
-                 const tuple<int, int>& tuple2)
+  int operator()(const std::tuple<int, int>& tuple1,
+                 const std::tuple<int, int>& tuple2)
   {
-    return get<1>(tuple1) <= get<1>(tuple2);
+    return std::get<1>(tuple1) <= std::get<1>(tuple2);
   }
 };
 
@@ -32,53 +33,55 @@ class PQ
         void add_layer_task(int layer, int priority);
         PQ(int max_priority);
     private:
-        priority_queue<tuple<int, int>, std::vector<tuple<int, int>>, layerComparator> queue;
+        std::priority_queue<std::tuple<int, int>, std::vector<std::tuple<int, int>>, layerComparator> queue;
         int max_priority;
         bool finished;
-        bool busy;
+        std::atomic_bool pq_busy;
 };
 
 PQ::PQ(int max_priority) {
-   this.max_priority = max_priority;
-   priority_queue<tuple<int, int>, std::vector<tuple<int, int>>, layerComparator> queue;
-   this.queue = queue;
-   this.finished = false;
-   this.busy = false;
+   this->max_priority = max_priority;
+   /* NOTE: unnecessary
+   std::priority_queue<std::tuple<int, int>, std::vector<std::tuple<int, int>>, layerComparator> queue;
+   this->queue = queue;
+   */
+   this->finished = false;
+   this->pq_busy = false;
 }
 
 int PQ::get_layer_task(void) {
-    bool success = false
+    bool success = false;
     // Wait for lock
     while (!success) {
         bool val = false;
-        bool success = busy.compare_exchange_weak(val, true);
+        bool success = pq_busy.compare_exchange_weak(val, true);
     }
     if (finished) {
-        busy = false;
+        pq_busy = false;
         return -2;
     }
     if (queue.empty()) {
-        busy = false;
+        pq_busy = false;
         return -1;
     }
-    tuple<int, int> tuple1 = queue.pop();
-    int layer = get<0>(tuple1);
-    int priority = get<1>(tuple1);
+    std::tuple<int, int> tuple1 = queue.top(); queue.pop();
+    int layer = std::get<0>(tuple1);
+    int priority = std::get<1>(tuple1);
     if (priority >= max_priority)
         finished = true;
-    busy = false;
+    pq_busy = false;
     return layer;
 }
 
 void PQ::add_layer_task(int layer, int priority) {
-    bool success = false
+    bool success = false;
     // Wait for lock
     while (!success) {
         bool val = false;
-        bool success = busy.compare_exchange_weak(val, true);
+        bool success = pq_busy.compare_exchange_weak(val, true);
     }
-    queue.push(make_tuple(layer, priority));
-    busy = false;
+    queue.push(std::make_tuple(layer, priority));
+    pq_busy = false;
 }
 
 template <class Matrix>
@@ -99,7 +102,7 @@ void* thread_fn3(void* args) {
 
     struct ThreadArgs<Matrix>* thread_args = (struct ThreadArgs<Matrix>*) args;
 
-    PQ pq = thread_args->pq;
+    PQ* pq = thread_args->pq;
     std::vector<Matrix>* outputs = thread_args->outputs;
     std::vector<Matrix>* hs = thread_args->hs;
     std::vector<Matrix>* cs = thread_args->cs;
@@ -111,22 +114,23 @@ void* thread_fn3(void* args) {
 
     while (true) {
         while (layer_idx == -1){
-            layer_idx = pq.get_layer_task();
+            layer_idx = pq->get_layer_task();
         }
         if(layer_idx == -2)
             break;
-        lstm->lstm_cells[layer_idx].forward((*outputs)[input_idx], (*hs)[layer_idx], (*cs)[layer_idx], (*hs)[layer_idx], (*cs)[layer_idx]);
+        lstm->lstm_cells[layer_idx].forward((*outputs)[progress3[layer_idx]], (*hs)[layer_idx], (*cs)[layer_idx], (*hs)[layer_idx], (*cs)[layer_idx]);
+        (*outputs)[progress3[layer_idx]] = (*hs)[layer_idx];
         progress3[layer_idx]++;
 
-        int old_layer = next_layer;
-        layer_idx = -1
+        int old_layer = layer_idx;
+        layer_idx = -1;
         int next_layer = old_layer + 1;
         if (next_layer < lstm->depth) {
-            bool success = false
+            bool success = false;
             // Wait for lock
             while (!success) {
                 bool val = false;
-                bool success = busy[next_layer].compare_exchange_weak(val, true);
+                bool success = busy3[next_layer].compare_exchange_weak(val, true);
             }
             if (one_depency[next_layer]) {
                 layer_idx = next_layer;
@@ -135,14 +139,14 @@ void* thread_fn3(void* args) {
                 one_depency[next_layer] == true;
             }
             // Release lock
-            busy[next_layer] = false;
+            busy3[next_layer] = false;
         }
         if (progress3[old_layer] < input_length) {
-            bool success = false
+            bool success = false;
             // Wait for lock
             while (!success) {
                 bool val = false;
-                bool success = busy[old_layer].compare_exchange_weak(val, true);
+                bool success = busy3[old_layer].compare_exchange_weak(val, true);
             }
             if (one_depency[old_layer]) {
                 // one_depency is always true for layer 0
@@ -150,13 +154,13 @@ void* thread_fn3(void* args) {
                 if (layer_idx == -1) {
                     layer_idx = old_layer;
                 } else {
-                    pq.add_layer_task(old_layer, old_layer + progress3[old_layer])
+                    pq->add_layer_task(old_layer, old_layer + progress3[old_layer]);
                 }
             } else {
                 one_depency[next_layer] == true;
             }
             // Release lock
-            busy[old_layer] = false;
+            busy3[old_layer] = false;
         }
     }
 
@@ -173,10 +177,12 @@ void LSTM<Matrix>::forward_par3(const std::vector<Matrix>& inputs, Matrix& outpu
 
     progress3 = new int[depth];
     one_depency = new bool[depth];
+    busy3 = new std::atomic_bool[depth];
 
     for (int i = 0; i < depth; i++) {
         progress3[i] = 0;
         one_depency[i] = true;
+        busy3[i] = false;
     }
 
     std::vector<Matrix> hs;
