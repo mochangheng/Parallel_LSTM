@@ -179,7 +179,7 @@ void LSTM<Matrix>::forward_par3(const std::vector<Matrix>& inputs, Matrix& outpu
     struct ThreadArgs<Matrix> args[num_threads];
     pthread_t threads[num_threads];
 
-    PQ pq = PQ(depth + input_length - 2);
+    PQ pq(depth + input_length - 2);
     pq.add_layer_task(0, 0);
 
     //args.pq = &pq;
