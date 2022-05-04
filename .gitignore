@@ -5,6 +5,7 @@
 # Custom
 .vscode/
 build/*
+imgs/
 
 ### C++ ###
 # Prerequisites

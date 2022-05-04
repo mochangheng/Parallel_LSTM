@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
-enable_language(CUDA)
-
 # set the project name
 project(parallel_lstm)
+enable_language(CUDA)
 
 set(SOURCES
     src/cuda_kernels.cu
