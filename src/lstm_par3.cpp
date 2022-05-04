@@ -13,8 +13,7 @@
 // Set this flag to use cuda
 const bool use_cuda = false;
 int* progress3;
-bool* one_depency;
-std::atomic_bool* busy3;
+std::atomic_int* depencies;
 
 struct layerComparator
 {
@@ -41,10 +40,6 @@ class PQ
 
 PQ::PQ(int max_priority) {
    this->max_priority = max_priority;
-   /* NOTE: unnecessary
-   std::priority_queue<std::tuple<int, int>, std::vector<std::tuple<int, int>>, layerComparator> queue;
-   this->queue = queue;
-   */
    this->finished = false;
    this->pq_busy = false;
 }
@@ -126,41 +121,23 @@ void* thread_fn3(void* args) {
         layer_idx = -1;
         int next_layer = old_layer + 1;
         if (next_layer < lstm->depth) {
-            bool success = false;
-            // Wait for lock
-            while (!success) {
-                bool val = false;
-                bool success = busy3[next_layer].compare_exchange_weak(val, true);
-            }
-            if (one_depency[next_layer]) {
+            int num_depend = --depencies[next_layer];
+            if (num_depend == 0) {
                 layer_idx = next_layer;
-                one_depency[next_layer] == false;
-            } else {
-                one_depency[next_layer] == true;
+                depencies[next_layer] = 2;
             }
-            // Release lock
-            busy3[next_layer] = false;
         }
         if (progress3[old_layer] < input_length) {
-            bool success = false;
-            // Wait for lock
-            while (!success) {
-                bool val = false;
-                bool success = busy3[old_layer].compare_exchange_weak(val, true);
-            }
-            if (one_depency[old_layer]) {
-                // one_depency is always true for layer 0
-                one_depency[old_layer] = old_layer == 0;
+            int num_depend = --depencies[old_layer];
+            if (num_depend == 0) {
+                // Layer 0 only has 1 dependency
+                depencies[old_layer] = old_layer == 0 ? 1 : 2;
                 if (layer_idx == -1) {
                     layer_idx = old_layer;
                 } else {
                     pq->add_layer_task(old_layer, old_layer + progress3[old_layer]);
                 }
-            } else {
-                one_depency[next_layer] == true;
             }
-            // Release lock
-            busy3[old_layer] = false;
         }
     }
 
@@ -176,13 +153,11 @@ void LSTM<Matrix>::forward_par3(const std::vector<Matrix>& inputs, Matrix& outpu
     int input_length = inputs.size();
 
     progress3 = new int[depth];
-    one_depency = new bool[depth];
-    busy3 = new std::atomic_bool[depth];
+    depencies = new std::atomic_int[depth];
 
     for (int i = 0; i < depth; i++) {
         progress3[i] = 0;
-        one_depency[i] = true;
-        busy3[i] = false;
+        depencies[i] = 1;
     }
 
     std::vector<Matrix> hs;
@@ -224,7 +199,7 @@ void LSTM<Matrix>::forward_par3(const std::vector<Matrix>& inputs, Matrix& outpu
 
     // Free resources
     delete[] progress3;
-    delete[] one_depency;
+    delete[] depencies;
 }
 
 template class LSTM<EigenMatrix>;
