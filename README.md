@@ -57,11 +57,6 @@ Everything in 100%, as well as exploring whether there are any other aspects of 
 (4/25) Write report and prepare for presentation
 
 
-## Things to adjust
-- `use_cuda` flags
-- assert call
-- change `forward_parX`
-
 ## Milestone
 
 First, we implemented the sequential LSTM inference logic in C++.
@@ -92,3 +87,9 @@ This is very close to the ideal speedup since the amount of speedup is limited b
 Indeed, when we used a depth of 8, we obtained a speedup of 7.9x with 8 threads.
 
 An issue that still needs to be investigated is the effect of parallelizing matrix multiplcation, as stated before.
+
+## Final Report
+
+The final report is in the `report.pdf` file. The LaTeX files are under the `report/` directory.
+
+The final presentation can be viewed at this [link](https://drive.google.com/file/d/1bR0lM5bB65PFYvbjaaasKwT-VL_gJivP/view?usp=sharing).
